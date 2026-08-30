@@ -12,7 +12,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"time"
+
+	probing "github.com/prometheus-community/pro-bing"
 )
 
 const (
@@ -35,8 +38,11 @@ func main() {
 
 	const starting_text string = "[ + ] 5t4rt3d h4ck1ng 0f: "
 
-	display_text(starting_text, colorGreen)
-	display_text_ln(targetIP, colorRed)
+	print_text(starting_text, colorGreen)
+	print_text_ln(targetIP, colorRed)
+
+	time.Sleep(500 * time.Millisecond)
+	ping_target(targetIP)
 }
 
 func check_args() {
@@ -69,14 +75,14 @@ func print_logo() {
 	`
 
 	fmt.Print(colorCyan)
-	for i := 0; i < len(asciiLogo); i++ {
+	for i := range len(asciiLogo) {
 		fmt.Printf("%c", asciiLogo[i])
 		time.Sleep(1 * time.Millisecond)
 	}
 	fmt.Println(colorReset)
 }
 
-func display_text(text, color string) {
+func print_text(text, color string) {
 	fmt.Print(color)
 	for i := range len(text) {
 		fmt.Printf("%c", text[i])
@@ -85,22 +91,52 @@ func display_text(text, color string) {
 	fmt.Printf("%s", colorReset)
 }
 
-func display_text_ln(text string, color string) {
-	display_text(text, color)
+func print_text_ln(text string, color string) {
+	print_text(text, color)
 	fmt.Println()
 }
 
-// [clswhre@arch ~]$ ping 1.1.1.1
-// PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.
-// 64 bytes from 1.1.1.1: icmp_seq=1 ttl=59 time=7.05 ms
-// 64 bytes from 1.1.1.1: icmp_seq=2 ttl=59 time=18.4 ms
-// 64 bytes from 1.1.1.1: icmp_seq=3 ttl=59 time=9.83 ms
-// 64 bytes from 1.1.1.1: icmp_seq=4 ttl=59 time=8.33 ms
-// 64 bytes from 1.1.1.1: icmp_seq=5 ttl=59 time=23.4 ms
-// 64 bytes from 1.1.1.1: icmp_seq=6 ttl=59 time=17.2 ms
-// 64 bytes from 1.1.1.1: icmp_seq=7 ttl=59 time=20.9 ms
-// 64 bytes from 1.1.1.1: icmp_seq=8 ttl=59 time=21.0 ms
+func ping_target(ip string) {
+	pinger, err := probing.NewPinger(ip)
+	if err != nil {
+		errMsg := fmt.Sprintf("[!] 3RR0R: %v\n", err)
+		print_text_ln(errMsg, colorRed)
+		return
+	}
 
-// --- 1.1.1.1 ping statistics ---
-// 8 packets transmitted, 8 received, 0% packet loss, time 7008ms
-// rtt min/avg/max/mdev = 7.050/15.766/23.370/5.997 ms
+	pinger.SetPrivileged(false)
+
+	pinger.OnRecv = func(pkt *probing.Packet) {
+
+		// add some fun things here
+
+		fmt.Printf("%s[DATA_RECV] %d bytes from %s: icmp_seq=%d time=%v%s\n",
+			colorWhite, pkt.Nbytes, pkt.IPAddr, pkt.Seq, pkt.Rtt.Round(time.Millisecond), colorReset)
+	}
+
+	// listen for ctrl+c
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	go func() {
+		<-c
+		pinger.Stop()
+	}()
+
+	initMsg := fmt.Sprintf("[ + ] 1N1T14T1NG C0NN3CT10N T0 %s...", ip)
+	print_text_ln(initMsg, colorYellow)
+
+	err = pinger.Run()
+	if err != nil {
+		failMsg := fmt.Sprintf("[ ! ] C0NN3CT10N F41L3D: %v", err)
+		print_text_ln(failMsg, colorRed)
+		return
+	}
+	stats := pinger.Statistics()
+	headerMsg := fmt.Sprintf("--- %s t4rg3t st4ts ---", stats.Addr)
+	print_text_ln(headerMsg, colorCyan)
+
+	statsMsg := fmt.Sprintf("%d packets transmitted, %d received, %v%% packet loss",
+		stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss)
+	print_text_ln(statsMsg, colorWhite)
+}
