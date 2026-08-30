@@ -1,3 +1,12 @@
+// /$$                      /$$$$$$$  /$$$$$$ /$$   /$$  /$$$$$$
+// | $$                     | $$__  $$|_  $$_/| $$$ | $$ /$$__  $$
+// | $$  /$$$$$$   /$$$$$$  | $$  \ $$  | $$  | $$$$| $$| $$  \__/
+// | $$ |____  $$ /$$__  $$ | $$$$$$$/  | $$  | $$ $$ $$| $$ /$$$$
+// | $$  /$$$$$$$| $$  \__/ | $$____/   | $$  | $$  $$$$| $$|_  $$
+// | $$ /$$__  $$| $$       | $$        | $$  | $$\  $$$| $$  \ $$
+// | $$|  $$$$$$$| $$       | $$       /$$$$$$| $$ \  $$|  $$$$$$/
+// |__/ \_______/|__/       |__/      |______/|__/  \__/ \______/
+
 package main
 
 import (
@@ -6,44 +15,48 @@ import (
 	"time"
 )
 
-const colorGreen = "\033[32m"
-const colorRed = "\033[31m"
-const colorCyan = "\033[36m"
-const colorReset = "\033[0m"
+const (
+	colorBlack   = "\033[30m"
+	colorRed     = "\033[31m"
+	colorGreen   = "\033[32m"
+	colorYellow  = "\033[33m"
+	colorBlue    = "\033[34m"
+	colorMagenta = "\033[35m"
+	colorCyan    = "\033[36m"
+	colorWhite   = "\033[37m"
+
+	colorReset = "\033[0m"
+)
 
 func main() {
+	check_args()
 	print_logo()
-	var targetIP string = check_args()
+	var targetIP string = get_ip()
 
-	const starting_text string = "[ + ] Started haxing da: "
-	
-	fmt.Print(colorGreen)
-	for i := 0; i < len(starting_text); i++ {
-		fmt.Printf("%c",starting_text[i])
-		time.Sleep(50 * time.Millisecond)
-	}
-	fmt.Printf("%s", colorReset)
+	const starting_text string = "[ + ] 5t4rt3d h4ck1ng 0f: "
 
-	fmt.Print(colorRed)
-	for i := 0; i < len(targetIP); i++ {
-		fmt.Printf("%c",targetIP[i])
-		time.Sleep(50 * time.Millisecond)
-		if i == ( len(targetIP) - 1 ) { fmt.Println() }
-	}
-	fmt.Printf("%s", colorReset)
+	display_text(starting_text, colorGreen)
+	display_text_ln(targetIP, colorRed)
 }
 
-
-func check_args() string{
+func check_args() {
 	if len(os.Args) < 2 {
-		fmt.Println("[!] ERROR! NO MAINFRAME TO HAX!")
+		fmt.Println("[!] 3RR0R! N0 M41NFR4M3 T0 H4X!")
 		fmt.Println("USAGE: larPING <ip>")
 		os.Exit(1)
 	}
+	if len(os.Args) > 2 {
+		fmt.Println("[!] 3RR0R! 0NLY 1 M41NFR4M3 N0W :c ")
+		fmt.Println("USAGE: larPING <ip>")
+		os.Exit(1)
+	}
+}
+
+func get_ip() string {
 	return os.Args[1]
 }
 
-func print_logo(){
+func print_logo() {
 	const asciiLogo string = `
 	/$$                      /$$$$$$$  /$$$$$$ /$$   /$$  /$$$$$$ 
 	| $$                     | $$__  $$|_  $$_/| $$$ | $$ /$$__  $$
@@ -54,14 +67,29 @@ func print_logo(){
 	| $$|  $$$$$$$| $$       | $$       /$$$$$$| $$ \  $$|  $$$$$$/
 	|__/ \_______/|__/       |__/      |______/|__/  \__/ \______/ 
 	`
-	
+
 	fmt.Print(colorCyan)
 	for i := 0; i < len(asciiLogo); i++ {
-		fmt.Printf("%c",asciiLogo[i])
+		fmt.Printf("%c", asciiLogo[i])
 		time.Sleep(1 * time.Millisecond)
 	}
 	fmt.Println(colorReset)
 }
+
+func display_text(text, color string) {
+	fmt.Print(color)
+	for i := range len(text) {
+		fmt.Printf("%c", text[i])
+		time.Sleep(50 * time.Millisecond)
+	}
+	fmt.Printf("%s", colorReset)
+}
+
+func display_text_ln(text string, color string) {
+	display_text(text, color)
+	fmt.Println()
+}
+
 // [clswhre@arch ~]$ ping 1.1.1.1
 // PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.
 // 64 bytes from 1.1.1.1: icmp_seq=1 ttl=59 time=7.05 ms
