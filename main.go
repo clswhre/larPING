@@ -12,6 +12,7 @@ package main
 import (
 	"fmt"
 	"math/rand/v2"
+	"net"
 	"os"
 	"os/signal"
 	"strings"
@@ -25,7 +26,7 @@ func main() {
 	printLogo()
 	var targetIP string = parseArgs()
 
-	const startingText string = "[ + ] 5t4rt3d h4ck1ng 0f: "
+	const startingText string = "[ + ] 5t4rt3d h4ck1ng | ip: "
 
 	printTypewriter(startingText, colorGreen)
 	printTextLn(targetIP, colorRed)
@@ -35,18 +36,29 @@ func main() {
 }
 
 func parseArgs() string {
+	// no ip
 	if len(os.Args) < 2 {
 		fmt.Println("[!] 3RR0R! N0 M41NFR4M3 T0 H4X!")
 		fmt.Println("USAGE: larPING <ip>")
 		os.Exit(1)
 	}
+
+	// ip + some other things(?)
 	if len(os.Args) > 2 {
 		fmt.Println("[!] 3RR0R! 0NLY 1 M41NFR4M3 N0W :c ")
 		fmt.Println("USAGE: larPING <ip>")
 		os.Exit(1)
 	}
+
+	// actually parse
+	if net.ParseIP(os.Args[1]) == nil {
+		fmt.Println("[!] 3RR0R! N0T V4LI8 1P :c ")
+		fmt.Println("USAGE: larPING <ip>")
+		os.Exit(1)
+	}
 	return os.Args[1]
 }
+
 func printLogo() {
 	const asciiLogo string = `
 	/$$                      /$$$$$$$  /$$$$$$ /$$   /$$  /$$$$$$ 
@@ -59,7 +71,7 @@ func printLogo() {
 	|__/ \_______/|__/       |__/      |______/|__/  \__/ \______/ 
 	`
 
-	fmt.Print(colorCyan)
+	fmt.Print(colorBlue)
 	for i := range len(asciiLogo) {
 		fmt.Printf("%c", asciiLogo[i])
 		time.Sleep(1 * time.Millisecond)
