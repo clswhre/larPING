@@ -11,7 +11,7 @@
  |__/ \_______/|__/        |__/      |______/|__/  \__/ \______/ 
 ```
 
-[![asciicast](https://asciinema.org/a/1264209.svg)](https://asciinema.org/a/1264209)
+[![asciicast](https://asciinema.org/a/GrbS5o9KAnhAHYSr.svg)](https://asciinema.org/a/GrbS5o9KAnhAHYSr)
 
 **larPING** - l33t-speak themed ping CLI tool written in Go, that wraps standard ping in a retro hollywood hacker aesthetic, complete with randomized ASCII art, fake payload injections, and colored typewriter terminal effects.
 
