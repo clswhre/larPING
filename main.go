@@ -15,92 +15,70 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
+	"github.com/likexian/whois"
 	probing "github.com/prometheus-community/pro-bing"
+	flag "github.com/spf13/pflag"
 )
 
-func main() {
-	parseArgs()
-	printLogo()
-	var targetIP string = parseArgs()
+type Config struct {
+	TargetIP string
+	Count    int
+	Whois    bool
+	Size     int
+}
 
-	const startingText string = "[ + ] 5t4rt3d h4ck1ng | ip: "
+func main() {
+	config := parseArgs()
+
+	printLogo()
 
 	printTypewriter(startingText, colorGreen)
-	printTextLn(targetIP, colorRed)
+	printTextLn(config.TargetIP, colorRed)
 
 	time.Sleep(500 * time.Millisecond)
-	ping_target(targetIP)
+
+	if config.Whois {
+		whoisQuery(config.TargetIP)
+	}
+	ping_target(config)
 }
 
-func parseArgs() string {
-	// no ip
-	if len(os.Args) < 2 {
-		fmt.Println("[!] 3RR0R! N0 M41NFR4M3 T0 H4X!")
-		fmt.Println("USAGE: larPING <ip>")
+func parseArgs() Config {
+	var cfg Config
+
+	flag.IntVarP(&cfg.Count, "count", "c", 0, "Numb3r 0f p4ck37s 70 s3nd (0 = infini73)")
+	flag.BoolVarP(&cfg.Whois, "whois", "w", false, "P3rf0rm WH0IS l00kup 0n 74rg37")
+	flag.IntVarP(&cfg.Size, "size", "s", 56, "ICMP p4ck37 p4yl04d siz3 in by73s")
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "US4G3: larPING [0pt10n5] <ip>\n\n0pt10ns:\n")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) != 1 {
+		fmt.Println("[!] 3RR0R! M41NFR4M3 0V3RL04D!")
+		flag.Usage()
 		os.Exit(1)
 	}
 
-	// ip + some other things(?)
-	if len(os.Args) > 2 {
-		fmt.Println("[!] 3RR0R! 0NLY 1 M41NFR4M3 N0W :c ")
-		fmt.Println("USAGE: larPING <ip>")
-		os.Exit(1)
-	}
-
-	// actually parse
-	if net.ParseIP(os.Args[1]) == nil {
+	cfg.TargetIP = args[0]
+	if net.ParseIP(cfg.TargetIP) == nil {
 		fmt.Println("[!] 3RR0R! N0T V4LI8 1P :c ")
-		fmt.Println("USAGE: larPING <ip>")
+		flag.Usage()
 		os.Exit(1)
 	}
-	return os.Args[1]
+
+	return cfg
 }
 
-func printLogo() {
-	const asciiLogo string = `
-	/$$                      /$$$$$$$  /$$$$$$ /$$   /$$  /$$$$$$ 
-	| $$                     | $$__  $$|_  $$_/| $$$ | $$ /$$__  $$
-	| $$  /$$$$$$   /$$$$$$  | $$  \ $$  | $$  | $$$$| $$| $$  \__/
-	| $$ |____  $$ /$$__  $$ | $$$$$$$/  | $$  | $$ $$ $$| $$ /$$$$
-	| $$  /$$$$$$$| $$  \__/ | $$____/   | $$  | $$  $$$$| $$|_  $$
-	| $$ /$$__  $$| $$       | $$        | $$  | $$\  $$$| $$  \ $$
-	| $$|  $$$$$$$| $$       | $$       /$$$$$$| $$ \  $$|  $$$$$$/
-	|__/ \_______/|__/       |__/      |______/|__/  \__/ \______/ 
-	`
-
-	fmt.Print(colorBlue)
-	for i := range len(asciiLogo) {
-		fmt.Printf("%c", asciiLogo[i])
-		time.Sleep(1 * time.Millisecond)
-	}
-	fmt.Println(colorReset)
-}
-
-func printTypewriter(text, color string) {
-	fmt.Print(color)
-	for i := range len(text) {
-		fmt.Printf("%c", text[i])
-		time.Sleep(50 * time.Millisecond)
-	}
-	fmt.Printf("%s", colorReset)
-}
-
-func printTextLn(text string, color string) {
-	printTypewriter(text, color)
-	fmt.Println()
-}
-
-func printInstant(text, color string) {
-	fmt.Printf("%s%s%s\n", color, text, colorReset)
-}
-
-func ping_target(ip string) {
-	pinger, err := probing.NewPinger(ip)
+func ping_target(cfg Config) {
+	pinger, err := probing.NewPinger(cfg.TargetIP)
 	if err != nil {
-		errMsg := fmt.Sprintf("[!] 3RR0R: %v\n", err)
+		errMsg := fmt.Sprintf(errorText, err)
 		printTextLn(errMsg, colorRed)
 		return
 	}
@@ -109,7 +87,7 @@ func ping_target(ip string) {
 
 	pinger.OnRecv = func(pkt *probing.Packet) {
 
-		pcktMsg := fmt.Sprintf(">>> %d 8yt35 fr0m %s | 1cmp_53q=%d | 71m3=%v",
+		pcktMsg := fmt.Sprintf(packetText,
 			pkt.Nbytes, pkt.IPAddr, pkt.Seq, pkt.Rtt.Round(time.Millisecond))
 		printInstant(pcktMsg, colorBlue)
 
@@ -131,38 +109,39 @@ func ping_target(ip string) {
 		pinger.Stop()
 	}()
 
-	initMsg := fmt.Sprintf("[ + ] 1N1T14T1NG C0NN3CT10N T0 %s...", ip)
+	initMsg := fmt.Sprintf(initConnection, cfg.TargetIP)
 	printTextLn(initMsg, colorYellow)
+
+	if cfg.Count > 0 {
+		pinger.Count = cfg.Count
+	}
+
+	pinger.Size = cfg.Size
 
 	err = pinger.Run()
 	if err != nil {
-		failMsg := fmt.Sprintf("[ ! ] C0NN3CT10N F41L3D: %v", err)
+		failMsg := fmt.Sprintf(failText, err)
 		printTextLn(failMsg, colorRed)
 		return
 	}
 	stats := pinger.Statistics()
-	headerMsg := fmt.Sprintf("\n--- %s t4rg3t st4ts ---", stats.Addr)
+	headerMsg := fmt.Sprintf(headerText, stats.Addr)
 	printTextLn(headerMsg, colorCyan)
 
-	statsMsg := fmt.Sprintf("%d packets transmitted, %d received, %3.2f%% packet loss",
+	statsMsg := fmt.Sprintf(statText,
 		stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss)
 	printTextLn(statsMsg, colorWhite)
 	fmt.Println("[+] M1SS10N C0MPL3T3. 3X1T...")
 }
 
-func printLarpText() {
-
-	randomInt := rand.IntN(len(phrases))
-	fmt.Println("\n", phrases[randomInt])
-}
-
-func printLarpLogos() {
-	asciiLogo := logos[rand.IntN(len(logos))]
-	asciiLogo = strings.ReplaceAll(asciiLogo, "@", "`")
-
-	randomColor := logoColors[rand.IntN(len(logoColors))]
-
-	fmt.Print(randomColor)
-	fmt.Println(asciiLogo)
-	fmt.Print(colorReset)
+func whoisQuery(domain string) {
+	printTypewriter(whoisText, colorYellow)
+	time.Sleep(500 * time.Millisecond)
+	result, err := whois.Whois(domain)
+	if err == nil {
+		printInstant(result, colorBlue)
+	} else {
+		errMsg := fmt.Sprintf(whoisErrText, err)
+		printTextLn(errMsg, colorRed)
+	}
 }

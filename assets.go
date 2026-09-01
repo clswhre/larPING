@@ -1,14 +1,25 @@
 package main
 
 const (
+	// colors
 	colorRed    = "\033[31m"
 	colorGreen  = "\033[32m"
 	colorYellow = "\033[33m"
 	colorBlue   = "\033[34m"
 	colorCyan   = "\033[36m"
 	colorWhite  = "\033[37m"
+	colorReset  = "\033[0m"
 
-	colorReset = "\033[0m"
+	// text
+	startingText   = "[ + ] 5t4rt3d h4ck1ng | ip: "
+	whoisText      = "[ + ] ini7i4liz47ing WH0IS r3qu3s7 ..."
+	initConnection = "[ + ] 1N1T14T1NG C0NN3CT10N T0 %s..."
+	errorText      = "[ ! ] 3RR0R: %v\n"
+	failText       = "[ ! ] C0NN3CT10N F41L3D: %v"
+	packetText     = ">>> %d 8yt35 fr0m %s | 1cmp_53q=%d | 71m3=%v"
+	headerText     = "\n--- %s t4rg3t st4ts ---"
+	statText       = "%d packets transmitted, %d received, %3.2f%% packet loss"
+	whoisErrText   = "[ ! ] WH01S 3RR0R: %v"
 )
 
 var logoColors = []string{
