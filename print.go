@@ -45,6 +45,10 @@ func printInstant(text, color string) {
 	fmt.Printf("%s%s%s\n", color, text, colorReset)
 }
 
+func printInstantLn(text, color string) {
+	fmt.Printf("\n%s%s%s\n", color, text, colorReset)
+}
+
 func printLarpText() {
 
 	randomInt := rand.IntN(len(phrases))
