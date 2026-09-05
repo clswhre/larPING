@@ -11,15 +11,27 @@ const (
 	colorReset  = "\033[0m"
 
 	// text
-	startingText   = "[ + ] 5t4rt3d h4ck1ng | ip: "
-	whoisText      = "[ + ] ini7i4liz47ing WH0IS r3qu3s7 ..."
-	initConnection = "[ + ] 1N1T14T1NG C0NN3CT10N T0 %s..."
-	errorText      = "[ ! ] 3RR0R: %v\n"
-	failText       = "[ ! ] C0NN3CT10N F41L3D: %v"
-	packetText     = ">>> %d 8yt35 fr0m %s | 1cmp_53q=%d | 71m3=%v"
-	headerText     = "\n--- %s t4rg3t st4ts ---"
-	statText       = "%d packets transmitted, %d received, %3.2f%% packet loss"
-	whoisErrText   = "[ ! ] WH01S 3RR0R: %v"
+	startingText    = "[ + ] 5t4rt3d 0p3r4t1on | ip: "
+	whoisText       = "[ + ] ini7i4liz47ing WH0IS r3qu3s7 ..."
+	initConnection  = "[ + ] 1N1T14T1NG C0NN3CT10N T0 %s...\n"
+	errorText       = "[ ! ] 3RR0R: %v\n"
+	failText        = "[ ! ] C0NN3CT10N F41L3D: %v"
+	packetText      = ">>> %d 8yt35 fr0m %s | 1cmp_53q=%d | 71m3=%v"
+	headerText      = "\n--- %s t4rg3t st4ts ---"
+	statText        = "%d packets transmitted, %d received, %3.2f%% packet loss"
+	whoisErrText    = "[ ! ] WH01S 3RR0R: %v"
+	rmRfWarningText = `
+[!] W4RN1NG: R00T D3L3T10N PR0T0C0L 1N1T14T3D!
+[!] 3X3CUT1NG: sudo rm -rf / --no-preserve-root
+[============================================]
+[-] UNM0UNT1NG /sys... [ 0K ]
+[-] W1P1NG /boot/vmlinuz... [ CR1T1C4L ]
+[-] 3R4S1NG K3RN3L M0DUL35... [ D0N3 ]
+[-] NUK1NG /bin /lib /etc... [ 100% ]
+[============================================]
+[!] SY5T3M H4LT3D. K3RN3L P4N1C: N0 0S F0UND.
+[+] G00D8Y3, H4CK3R.
+`
 )
 
 var logoColors = []string{

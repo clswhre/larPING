@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	_ "embed"
+
 	"github.com/likexian/whois"
 	probing "github.com/prometheus-community/pro-bing"
 	flag "github.com/spf13/pflag"
@@ -23,19 +25,25 @@ type Config struct {
 	Size   int
 }
 
+//go:embed logo.txt
+var asciiLogo string
+
 func main() {
+
 	cfg := parseArgs()
 
-	printLogo()
-	printTypewriter(startingText, colorGreen)
-	printTextLn(cfg.Target, colorRed)
+	printTypewriter(1*time.Millisecond, colorBlue, "%s\n", asciiLogo)
+	printTypewriter(50*time.Millisecond, colorGreen, "%s", startingText)
+	printTypewriter(50*time.Millisecond, colorRed, "%s\n", cfg.Target)
 
 	time.Sleep(300 * time.Millisecond)
 
+	checkIP(cfg)
 	if cfg.Whois {
 		whoisQuery(cfg.Target)
 	}
 
+	printTypewriter(600*time.Millisecond, colorBlue, "...\n")
 	pingTarget(cfg)
 }
 
@@ -79,7 +87,7 @@ func parseArgs() Config {
 func pingTarget(cfg Config) {
 	pinger, err := probing.NewPinger(cfg.IP.String())
 	if err != nil {
-		printTextLn(fmt.Sprintf(errorText, err), colorRed)
+		printColor(colorRed, errorText, err)
 		return
 	}
 
@@ -90,15 +98,13 @@ func pingTarget(cfg Config) {
 	}
 
 	pinger.OnRecv = func(pkt *probing.Packet) {
-		pcktMsg := fmt.Sprintf(packetText, pkt.Nbytes, pkt.IPAddr, pkt.Seq, pkt.Rtt.Round(time.Millisecond))
-		printInstant(pcktMsg, colorBlue)
-
-		printInstant(phrases[rand.IntN(len(phrases))], colorYellow)
+		printColor(colorBlue, packetText, pkt.Nbytes, pkt.IPAddr, pkt.Seq, pkt.Rtt.Round(time.Millisecond))
+		printColor(colorYellow, "%s", phrases[rand.IntN(len(phrases))])
 
 		if rand.IntN(4) == 0 {
 			printLarpLogos()
 		}
-		printInstant("----------------------------------------", colorCyan)
+		printColor(colorCyan, "----------------------------------------")
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -109,29 +115,40 @@ func pingTarget(cfg Config) {
 		pinger.Stop()
 	}()
 
-	printTextLn(fmt.Sprintf(initConnection, cfg.Target), colorYellow)
+	printColor(colorYellow, initConnection, cfg.Target)
 
 	if err := pinger.Run(); err != nil {
-		printTextLn(fmt.Sprintf(failText, err), colorRed)
+		printColor(colorRed, failText, err)
 		return
 	}
 
 	stats := pinger.Statistics()
-	printTextLn(fmt.Sprintf(headerText, stats.Addr), colorCyan)
-	printTextLn(fmt.Sprintf(statText, stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss), colorWhite)
+	printColor(colorCyan, headerText, stats.Addr)
+	printColor(colorWhite, statText, stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss)
 	fmt.Println("[+] M1SS10N C0MPL3T3. 3X1T...")
 }
 
 func whoisQuery(target string) {
-	printTypewriter(whoisText, colorYellow)
+	printTypewriter(50*time.Millisecond, colorYellow, "%s\n", whoisText)
 	time.Sleep(300 * time.Millisecond)
 
 	result, err := whois.Whois(target)
-	printInstantLn("----------", colorWhite)
+	printColor(colorWhite, "\n----------")
 	if err != nil {
-		printTextLn(fmt.Sprintf(whoisErrText, err), colorRed)
+		printColor(colorRed, whoisErrText, err)
 		return
 	}
 
-	printInstantLn(result, colorBlue)
+	printColor(colorBlue, "%s", result)
+}
+
+func checkIP(cfg Config) {
+	if cfg.IP.To16().String() == "127.0.0.1" {
+		printTypewriter(50*time.Millisecond, colorRed, rmRfWarningText)
+		printColor(colorYellow, "\n[?] JUS7 K1DD1NG... 0R 4M I? ;)\n")
+		os.Exit(2)
+	}
+	if cfg.IP.To16().String() == "1.1.1.1" {
+		printTypewriter(100*time.Millisecond, colorRed, "Okay... Whatever\n")
+	}
 }
